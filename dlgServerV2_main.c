@@ -7,7 +7,11 @@
  *
  * Modificaciones:
  * --------------
- *
+ * 2017-Feb-15
+ * Para cumplir la nueva normativa de DINAMA, creo una tabla identica a tbMain pero la llamo
+ * tbMain_auxDinama para insertar lo mismo que en tbMain pero poder manipularla sin problema.
+ * Para esto modifico el archivo dlgServerV2_frames, la funcion pDataFrame.
+ * 
  * 2013-Ago-30:
  * Utilizo una estructura para almacenar los datos de c/frame en vez de un puntero a un array de strings.
  *
@@ -83,7 +87,7 @@ void sig_chld(int signo);
 void rxFramesProcess(int sockfd);
 void decodeFrame(void);
 
-const char *argp_program_version = "dlgServerV2 V1.1 @20170215";
+const char *argp_program_version = "dlgServerV2 V1.1a @20170215";
 const char *argp_program_bug_address ="<spymovil@spymovil.com>";
 static char doc[] = "dlgServerV2: Servidor de comunicaciones multasking de DLGs";
 

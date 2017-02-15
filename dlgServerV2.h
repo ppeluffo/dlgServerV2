@@ -54,6 +54,7 @@ char logBuffer[MAXLOGSTRING];
 char alarmMsgBuffer[32];
 char txMsgBuffer[32];
 char mysqlCmd[MAXSQLCMDSTRING];
+char mysqlCmd_aux[MAXSQLCMDSTRING];
 
 struct {
 	char fullDate[32];

@@ -144,6 +144,7 @@ void pDataFrame(void)
 char tmp[10];
 int i, fieldPos;
 int bufPos;
+int bufPos_aux;
 char dispQuery[MAXSQLCMDSTRING];
 /*
  *  // Si quiero debugear y ver como quedo el frame parseado.
@@ -210,23 +211,32 @@ char dispQuery[MAXSQLCMDSTRING];
 
 	/* PASO 4: Inserto en tbMain */
 	bufPos = 0;
+	bufPos_aux = 0;
 	bzero(mysqlCmd, sizeof(mysqlCmd));
+	bzero(mysqlCmd_aux, sizeof(mysqlCmd_aux));
 
 	// Armo el sql string "INSERT INTO tbMain ( values list ) VALUES (...."
 	bufPos += sprintf(mysqlCmd + bufPos, "INSERT INTO tbMain (dlgId,fechaHoraData,uxTsData,fechaHoraSys,uxTsSys");
+	bufPos_aux += sprintf(mysqlCmd_aux + bufPos_aux, "INSERT INTO tbMain_auxDinama (dlgId,fechaHoraData,uxTsData,fechaHoraSys,uxTsSys");
+	
 	for (i=0; i< dlgConfParam.nroParametros; i++) {
 		bufPos += sprintf(mysqlCmd + bufPos, ",%s,%s,%s", dlgConfParam.pList[i].tbMColValName, dlgConfParam.pList[i].tbMColMagName,dlgConfParam.pList[i].tbMColDispName );
+		bufPos_aux += sprintf(mysqlCmd_aux + bufPos_aux, ",%s,%s,%s", dlgConfParam.pList[i].tbMColValName, dlgConfParam.pList[i].tbMColMagName,dlgConfParam.pList[i].tbMColDispName );
 	}
 	bufPos += sprintf(mysqlCmd + bufPos, ",rcvdFrame) VALUES (\"%s\",\"%s\",UNIX_TIMESTAMP(fechaHoraData),\"%s\",UNIX_TIMESTAMP(fechaHoraSys)", st_dlgFrame.dlgId,st_dlgFrame.fechaHoraData,sysFecha.fullDate);
+	bufPos_aux += sprintf(mysqlCmd_aux + bufPos_aux, ",rcvdFrame) VALUES (\"%s\",\"%s\",UNIX_TIMESTAMP(fechaHoraData),\"%s\",UNIX_TIMESTAMP(fechaHoraSys)", st_dlgFrame.dlgId,st_dlgFrame.fechaHoraData,sysFecha.fullDate);
 
 	// Termino el sql string con los VALUES .....)"
 	for (i=0; i< dlgConfParam.nroParametros; i++) {
 		bzero(dispQuery, sizeof(dispQuery));
 		sprintf(dispQuery, "(SELECT disp FROM tbDlgParserConf WHERE dlgId LIKE \"%s\" AND fieldPos=%d)",st_dlgFrame.dlgId, dlgConfParam.pList[i].fieldPos);
 		bufPos += sprintf(mysqlCmd + bufPos, ",%.2f,%.2f,%s", dlgConfParam.pList[i].val, dlgConfParam.pList[i].mag, dispQuery);
+		bufPos_aux += sprintf(mysqlCmd_aux + bufPos_aux, ",%.2f,%.2f,%s", dlgConfParam.pList[i].val, dlgConfParam.pList[i].mag, dispQuery);
 	}
 
 	bufPos += sprintf(mysqlCmd + bufPos, ",\"%s\");",st_dlgFrame.dlgRcvdFrame );
+	bufPos_aux += sprintf(mysqlCmd_aux + bufPos_aux, ",\"%s\");",st_dlgFrame.dlgRcvdFrame );
+
 
 	bzero(logBuffer, sizeof(logBuffer));
 	if (mysql_query (conn, mysqlCmd) != 0) {
@@ -242,6 +252,19 @@ char dispQuery[MAXSQLCMDSTRING];
 		}
 	}
 
+	bzero(logBuffer, sizeof(logBuffer));
+	if (mysql_query (conn, mysqlCmd_aux) != 0) {
+		sprintf (logBuffer, "[%s][%d] ERROR_012b: No puedo ejecutar stmt Main_auxDinama: %s",st_dlgFrame.dlgId, getpid(), mysql_stmt_error(stmt_main) );
+		F_syslog("%s", logBuffer);
+		sprintf (logBuffer, "[%s][%d] ERROR_012b: [STMT=%s]", st_dlgFrame.dlgId, getpid(), mysqlCmd_aux );
+		F_syslog("%s", logBuffer);
+	} else {
+		if (systemParameters.debugLevel >=LOWDEBUG ) {
+			sprintf(logBuffer, "[%s][%d] InsertMain_auxDinama OK", st_dlgFrame.dlgId,getpid());
+			//sprintf (logBuffer, "[%s][%d] DEBUG: [STMT=%s]", st_dlgFrame.dlgId, getpid(), mysqlCmd );
+			F_syslog("%s", logBuffer);
+		}
+	}
 	//sprintf (logBuffer, "[%s][%d] DEBUG: [STMT=%s]", st_dlgFrame.dlgId, getpid(), mysqlCmd );
 	//F_syslog("%s", logBuffer);
 
